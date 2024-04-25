@@ -14,8 +14,10 @@ class ActivityBot:
         self.activity_url = "https://apis.pocketuni.net/apis/activity/join"
         self.info_url = "https://apis.pocketuni.net/apis/activity/info"
         self.userData = dataCrypter.decrypt()
+        print(self.userData)
         self.curToken = ""
         self.flag = {}
+        self.debug = False
 
     def login(self):
         try:
@@ -56,7 +58,7 @@ class ActivityBot:
                     headers["Authorization"] = f"Bearer {self.curToken}" + ":" + str(self.userData.get("sid"))
                     response = requests.post(self.activity_url, headers=headers, json=data)
                     if response.status_code == 200:
-                        print("请求成功:", response.text)
+                        print("请求成功,活动:",activity_id , response.text)
                         if(response.text == '{"code":0,"message":"成功","data":{"msg":"PU君提示：报名成功，请留意活动签到时间哦~"}}'):
                             lock.acquire()
                             try:
@@ -108,11 +110,11 @@ class ActivityBot:
                 break
             threading.Thread(target=send_request).start()
             time.sleep(0.2)
-        for _ in range(60):
-            if self.flag.get(activity_id) == True:
-                break
-            threading.Thread(target=send_request).start()
-            time.sleep(1)
+        # for _ in range(60):
+        #     if self.flag.get(activity_id) == True:
+        #         break
+        #     threading.Thread(target=send_request).start()
+        #     time.sleep(1)
 
     debug = False
     debugTime = datetime.now() + timedelta(seconds=15)
