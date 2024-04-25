@@ -2,3 +2,5 @@
 config.ini
 .cryptwood
 .cryptUserData
+.idea
+__pycache__
