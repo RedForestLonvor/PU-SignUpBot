@@ -14,10 +14,10 @@ class ActivityBot:
         self.activity_url = "https://apis.pocketuni.net/apis/activity/join"
         self.info_url = "https://apis.pocketuni.net/apis/activity/info"
         self.userData = dataCrypter.decrypt()
-        # print(self.userData)
+        print(self.userData)
         self.curToken = ""
         self.flag = {}
-        self.debug = False
+        self.debug = True
 
     def login(self):
         try:
@@ -98,7 +98,8 @@ class ActivityBot:
 
         else :
             time.sleep(time_to_start - 60)
-        
+
+        current_time = datetime.now()
         time_to_start = (start_time - current_time).total_seconds()
 
         if time_to_start > 0.1:
@@ -118,10 +119,11 @@ class ActivityBot:
         #     threading.Thread(target=send_request).start()
         #     time.sleep(1)
 
-    debug = False
     debugTime = datetime.now() + timedelta(seconds=15)
 
     def get_join_start_time(self, activity_id):
+        if self.debug == True:
+            return self.debugTime
         headers = HEADERS_ACTIVITY_INFO.copy()
         headers["Authorization"] = f"Bearer {self.curToken}" + ":" + str(self.userData.get("sid"))
         payload = {"id": activity_id}
@@ -129,8 +131,6 @@ class ActivityBot:
             response = requests.post(self.info_url, headers=headers, json=payload)
             join_start_time_str = response.json().get("data", {}).get("baseInfo", {}).get("joinStartTime")
             if join_start_time_str:
-                if self.debug == True:
-                    return self.debugTime
                 return datetime.strptime(join_start_time_str, '%Y-%m-%d %H:%M:%S')
         except Exception as e:
             print(f"获取活动信息失败：{e}")
