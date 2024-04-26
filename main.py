@@ -14,10 +14,9 @@ class ActivityBot:
         self.activity_url = "https://apis.pocketuni.net/apis/activity/join"
         self.info_url = "https://apis.pocketuni.net/apis/activity/info"
         self.userData = dataCrypter.decrypt()
-        print(self.userData)
         self.curToken = ""
         self.flag = {}
-        self.debug = True
+        self.debug = False
 
     def login(self):
         try:
