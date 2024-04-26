@@ -99,6 +99,8 @@ class ActivityBot:
         else :
             time.sleep(time_to_start - 60)
         
+        time_to_start = (start_time - current_time).total_seconds()
+
         if time_to_start > 0.1:
             time.sleep(time_to_start - 0.1)
 
