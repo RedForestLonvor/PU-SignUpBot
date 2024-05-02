@@ -57,7 +57,7 @@ class ActivityBot:
                     headers["Authorization"] = f"Bearer {self.curToken}" + ":" + str(self.userData.get("sid"))
                     response = requests.post(self.activity_url, headers=headers, json=data)
                     if response.status_code == 200:
-                        print("请求成功,活动:",activity_id , response.text)
+                        print("请求成功,活动:",activity_id , response.text, "请求时间:" ,datetime.now())
                         if(response.text == '{"code":0,"message":"成功","data":{"msg":"PU君提示：报名成功，请留意活动签到时间哦~"}}'):
                             lock.acquire()
                             try:
@@ -129,6 +129,7 @@ class ActivityBot:
         try:
             response = requests.post(self.info_url, headers=headers, json=payload)
             join_start_time_str = response.json().get("data", {}).get("baseInfo", {}).get("joinStartTime")
+            print(join_start_time_str)
             if join_start_time_str:
                 return datetime.strptime(join_start_time_str, '%Y-%m-%d %H:%M:%S')
         except Exception as e:
