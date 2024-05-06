@@ -96,13 +96,16 @@ class ActivityBot:
                     break
 
         else :
+
+            print(datetime.now(),"sleep:",time_to_start - 60)
             time.sleep(time_to_start - 60)
 
         current_time = datetime.now()
         time_to_start = (start_time - current_time).total_seconds()
 
-        if time_to_start > 0.1:
-            time.sleep(time_to_start - 0.1)
+        if time_to_start > 0:
+            print(datetime.now(), "sleep:", time_to_start - 0)
+            time.sleep(time_to_start - 0)
 
         for _ in range(3):
             threading.Thread(target=send_request).start()
