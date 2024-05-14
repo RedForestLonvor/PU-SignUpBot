@@ -110,7 +110,7 @@ class ActivityBot:
         for _ in range(3):
             threading.Thread(target=send_request).start()
             # time.sleep(0.5)
-        for _ in range(5):
+        for _ in range(20):
             if self.flag.get(activity_id) == True:
                 break
             threading.Thread(target=send_request).start()
