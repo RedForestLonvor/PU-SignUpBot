@@ -110,16 +110,16 @@ class ActivityBot:
         for _ in range(3):
             threading.Thread(target=send_request).start()
             # time.sleep(0.5)
-        for _ in range(20):
+        for _ in range(10):
             if self.flag.get(activity_id) == True:
                 break
             threading.Thread(target=send_request).start()
-            time.sleep(0.2)
-        # for _ in range(60):
-        #     if self.flag.get(activity_id) == True:
-        #         break
-        #     threading.Thread(target=send_request).start()
-        #     time.sleep(1)
+            time.sleep(1)
+        for _ in range(60):
+            if self.flag.get(activity_id) == True:
+                break
+            threading.Thread(target=send_request).start()
+            time.sleep(1)
 
     debugTime = datetime.now() + timedelta(seconds=15)
 
