@@ -7,32 +7,19 @@
 
 ## 使用方法
 
-### 1.替换个人信息
-
-替换掉`main.py`中的`ActivityBot`类中的
-
-```python
-    def __init__(self):
-        ...
-        self.userData = dataCrypter.decrypt()
-        ...
-```
-
-```python
-self.userData = {'userName': '...', 'password': '...', 'sid': ..., 'device': 'pc'}
-```
-
-userName通常是学号，sid可以通过抓包获得
-
-或者使用cryptwood，详情参考[cryptwood](https://github.com/RedForestLonvor/cryptwood)
-
-### 2.替换活动信息
+### 1.替换活动信息
 
 替换掉`activity_ids.txt`中的活动id，活动id可以通过网页端活动的url获得
 
-### 3.运行main.py
+### 2.运行main.py
 
 运行main.py
+
+### 3.输入个人信息
+
+请依据程序提示输入您的`userName`(通常为学号)，`password`，并选择您的学校即可。
+
+
 
 ## 代码情况
 
