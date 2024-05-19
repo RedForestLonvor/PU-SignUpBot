@@ -34,6 +34,17 @@ userName通常是学号，sid可以通过抓包获得
 
 运行main.py
 
+## 关于sid
+
+如果使用网页端登陆，那么在选完学校以后，你发现url变成了
+```url
+https://class.pocketuni.net/#/login?sid=xxxxxxxxxxxxxxxxxx
+```
+
+sid就是这里的xxxxxxxxxxxxxxxxxx
+
+此时应该在输入账号密码的界面
+
 ## 代码情况
 
 会多线程的发请求，报名成功会停止
