@@ -23,7 +23,7 @@
 
 ### 4.关于sid的问题：
 
- 特别感谢@(Mhenwa)[https://github.com/Mhenwa]解决了sid的问题
+ 特别感谢[@Mhenwa](https://github.com/Mhenwa)解决了sid的问题
 
 ## 代码情况
 
