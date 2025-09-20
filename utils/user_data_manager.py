@@ -6,6 +6,7 @@ from typing import Dict
 from utils.single import single_account
 from loguru import logger
 
+
 class UserDataManager:
     def __init__(self, file_path):
         self.file_path = file_path
@@ -131,7 +132,7 @@ class UserDataManager:
 
     def sign_up(self):
         """
-        处理用户根据活动类别、院系、参与年级报名
+        处理用户报名
         :return: None
         """
         logger.info("开始处理用户报名任务")

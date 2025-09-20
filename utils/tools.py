@@ -1,6 +1,5 @@
 import random
 import time
-
 import requests
 from loguru import logger
 from typing import Dict, List
@@ -134,6 +133,42 @@ def get_activity_type(token: str, sid: str) -> List | None:
         return None
 
 
+def get_info(activity_id :  str, token : str, sid : str):
+    """
+    获得单个活动的详细信息
+    :param activity_id: 活动id
+    :return: 当前id活动的详细信息
+    """
+    headers = HEADERS_ACTIVITY.copy()
+    headers['Authorization'] = f"Bearer {token}" + ":" + str(sid)
+    payload = {"id": int(activity_id)}
+    try:
+        response = requests.post("https://apis.pocketuni.net/apis/activity/info", headers=headers, json=payload)
+        response.raise_for_status()
+        if response.status_code != 200:
+            logger.error(f"获取活动信息失败，响应: {response.text}")
+            return {}
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"获取活动信息失败，HTTP错误: {str(e)}")
+        return {}
+    return response.json().get("data", {}).get("baseInfo", {})
+
+def get_single_activity(activity_id : str, info : Dict):
+    """
+    筛选获取单个活动的信息
+    :param activity_id: 活动id
+    :param info: 当前活动的详细信息
+    :return:
+    """
+    logger.info(f"正在解析活动 {activity_id} 的信息")
+    a = {"activity_id": activity_id, "分数": info.get("credit"),
+         "活动分类": info.get("categoryName"), "举办组织": info.get("creatorName"),
+         "活动名称": info.get("name"), "开始报名时间": info.get("joinStartTime"),
+         "活动开始时间": info.get("startTime"), "活动结束时间": info.get("endTime"),
+         "活动地址": info.get("address"), "可报名人数": info.get("allowUserCount") - info.get("joinUserCount")}
+    logger.info(f"活动{activity_id} 的信息为解析完成")
+    return a
+
 def get_allowed_activity_list(user : Dict) -> List:
     """
     获取满足用户筛选需求的活动
@@ -174,31 +209,6 @@ def get_allowed_activity_list(user : Dict) -> List:
         logger.error(f"获取活动列表失败，未知错误: {str(e)}")
         return []
 
-    def get_info(activity_id):
-        """
-        获得单个活动的详细信息
-        :param activity_id: 活动id
-        :return: 当前id活动的详细信息
-        """
-        payload = {"id": activity_id}
-        response = requests.post("https://apis.pocketuni.net/apis/activity/info", headers=headers, json=payload)
-        response.raise_for_status()
-        return response.json().get("data", {}).get("baseInfo", {})
-
-    def get_single_activity(activity_id : str, info : Dict):
-        """
-        筛选获取单个活动的信息
-        :param activity_id: 活动id
-        :param info: 当前活动的详细信息
-        :return:
-        """
-        a = {"activity_id": activity_id, "分数": info.get("credit"),
-             "活动分类": info.get("categoryName"), "举办组织": info.get("creatorName"),
-             "活动名称": info.get("name"), "开始报名时间": info.get("joinStartTime"),
-             "活动开始时间": info.get("startTime"), "活动结束时间": info.get("endTime"),
-             "活动地址": info.get("address"), "可报名人数": info.get("allowUserCount") - info.get("joinUserCount")}
-        return a
-
     def is_valid(info : Dict, college : str) -> bool:
         """
         判断当前活动是否满足用户筛选条件
@@ -228,7 +238,7 @@ def get_allowed_activity_list(user : Dict) -> List:
             response = requests.post(activity_url, headers=headers, json=payload)
             response.raise_for_status()
             for activity in response.json().get("data", {}).get("list", []):
-                info = get_info(activity.get("id"))
+                info = get_info(activity.get("id"), user.get('token'), user.get('sid'))
                 if not is_valid(info,user.get("college")):
                     continue
                 activity_list.append(get_single_activity(activity.get("id"), info))
@@ -275,5 +285,137 @@ def filter_activity_type(user : Dict) -> None:
         print("该类型已添加完毕。")
         print("=" * 20)
 
-def make_email(info : Dict) -> str:
+def make_email(activity_id : str, user : Dict) -> str:
+    """
+    制作报名成功邮件信息
+    :param activity_id: 活动id
+    :param user: 用户信息
+    :return: 邮件信息
+    """
+    logger.info("开始制作报名成功邮件信息")
+    info = get_single_activity(activity_id, get_info(activity_id, user.get('token'), user.get('sid')))
+    
+    # 创建邮件内容
+    email_content = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px; }}
+            .content {{ background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-top: 20px; }}
+            .activity-info {{ background-color: white; padding: 15px; border-left: 4px solid #4CAF50; margin: 10px 0; }}
+            .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎉 报名成功通知</h1>
+            </div>
+            
+            <div class="content">
+                <p>亲爱的 {user.get('userName', '用户')}，</p>
+                
+                <p>恭喜您！您已成功报名参加以下活动：</p>
+                
+                <div class="activity-info">
+                    <h3>📋 活动详情</h3>
+                    <p><strong>活动名称：</strong>{info.get('活动名称', '未知活动')}</p>
+                    <p><strong>活动分类：</strong>{info.get('活动分类', '未分类')}</p>
+                    <p><strong>举办组织：</strong>{info.get('举办组织', '未知组织')}</p>
+                    <p><strong>活动地址：</strong>{info.get('活动地址', '待定')}</p>
+                    <p><strong>活动分数：</strong>{info.get('分数', '0')} 分</p>
+                    <p><strong>开始报名时间：</strong>{info.get('开始报名时间', '待定')}</p>
+                    <p><strong>活动开始时间：</strong>{info.get('活动开始时间', '待定')}</p>
+                    <p><strong>活动结束时间：</strong>{info.get('活动结束时间', '待定')}</p>
+                </div>
+                
+                <p><strong>💡 温馨提示：</strong></p>
+                <ul>
+                    <li>请务必留意活动签到时间，准时参加</li>
+                    <li>请携带相关证件按时到达活动地点</li>
+                    <li>如有疑问，请联系活动主办方</li>
+                </ul>   
+                
+                <p>祝您活动愉快！</p>
+            </div>
+            
+            <div class="footer">
+                <p>此邮件由 PU-SignUpBot 自动发送，请勿回复</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    logger.info("邮件制作完毕")
+    return email_content.strip()
+
+
+def send_email(email_info : str, addressee : str):
+    """
+    发送报名成功邮件
+    :param email_info: 邮件内容（HTML格式）
+    :param addressee: 收件人邮箱地址
+    :return: 发送成功返回True，失败返回False
+    """
+    from dotenv import load_dotenv
+    load_dotenv()
+    import smtplib
+    import os
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from email.header import Header
+    try:
+        # 从环境变量获取邮件配置
+        smtp_server = "smtp.qq.com"  # QQ邮箱SMTP服务器
+        smtp_port = int(os.getenv("INFO_EMAIL_PORT", "465"))  # 默认465端口
+        sender_email = os.getenv("INFO_EMAIL_HOST", "").strip('"')
+        sender_password = os.getenv("INFO_EMAIL_SMTP_PASS", "").strip('"')
+        
+        # 检查配置是否完整
+        if not sender_email or not sender_password:
+            logger.warning("邮件配置不完整，请检查 .env 文件中的 INFO_EMAIL_HOST 和 INFO_EMAIL_SMTP_PASS 配置")
+            return False
+        
+        if not addressee or addressee.strip() == "":
+            logger.warning("收件人邮箱地址为空，无法发送邮件")
+            return False
+            
+        # 创建邮件对象
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = Header('🎉 PU活动报名成功通知', 'utf-8')
+        from email.utils import formataddr
+        msg['From'] = formataddr(('PU活动助手 ', sender_email))
+
+        msg['To'] = formataddr(("你", addressee))
+
+
+        # 添加HTML内容
+        html_part = MIMEText(email_info, 'html', 'utf-8')
+        msg.attach(html_part)
+        
+        # 连接SMTP服务器并发送邮件
+        logger.info(f"正在发送邮件到 {addressee}...")
+        
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            server.quit()
+            
+        logger.success(f"邮件发送成功！收件人: {addressee}")
+        return True
+        
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"邮件发送失败：SMTP认证错误，请检查邮箱账号和授权码是否正确 - {str(e)}")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"邮件发送失败：SMTP错误 - {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"邮件发送失败：未知错误 - {str(e)}")
+        return False
+
+
 
