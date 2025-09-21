@@ -285,7 +285,7 @@ def filter_activity_type(user : Dict) -> None:
         print("该类型已添加完毕。")
         print("=" * 20)
 
-def make_email(activity_id : str, user : Dict) -> str:
+def make_success_email(activity_id : str, user : Dict) -> str:
     """
     制作报名成功邮件信息
     :param activity_id: 活动id
@@ -352,8 +352,74 @@ def make_email(activity_id : str, user : Dict) -> str:
     logger.info("邮件制作完毕")
     return email_content.strip()
 
+def make_fail_email(activity_id: str, user: dict) -> str:
+    """
+    制作报名失败邮件信息
+    :param activity_id: 活动id
+    :param user: 用户信息
+    :return: 邮件信息（HTML 字符串）
+    """
+    logger.info("开始制作报名失败邮件信息")
+    info = get_single_activity(activity_id, get_info(activity_id, user.get('token'), user.get('sid')))
 
-def send_email(email_info : str, addressee : str):
+    email_content = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body{{font-family:Arial,sans-serif;line-height:1.6;color:#333;margin:0;padding:0}}
+            .container{{max-width:600px;margin:0 auto;padding:20px}}
+            .header{{background-color:#e57373;color:#fff;padding:20px;text-align:center;border-radius:5px}}
+            .content{{background-color:#f9f9f9;padding:20px;border-radius:5px;margin-top:20px}}
+            .activity-info{{background-color:#fff;padding:15px;border-left:4px solid #e57373;margin:10px 0}}
+            .footer{{text-align:center;margin-top:20px;color:#666;font-size:12px}}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>😔 报名未成功通知</h1>
+            </div>
+
+            <div class="content">
+                <p>亲爱的 {user.get('userName', '用户')}，</p>
+
+                <p>很抱歉，您本次报名未能成功，具体信息如下：</p>
+
+                <div class="activity-info">
+                    <h3>📋 活动详情</h3>
+                    <p><strong>活动名称：</strong>{info.get('活动名称', '未知活动')}</p>
+                    <p><strong>活动分类：</strong>{info.get('活动分类', '未分类')}</p>
+                    <p><strong>举办组织：</strong>{info.get('举办组织', '未知组织')}</p>
+                    <p><strong>活动地址：</strong>{info.get('活动地址', '待定')}</p>
+                    <p><strong>活动分数：</strong>{info.get('分数', '0')} 分</p>
+                    <p><strong>开始报名时间：</strong>{info.get('开始报名时间', '待定')}</p>
+                    <p><strong>活动开始时间：</strong>{info.get('活动开始时间', '待定')}</p>
+                    <p><strong>活动结束时间：</strong>{info.get('活动结束时间', '待定')}</p>
+                </div>
+
+                <p><strong>💡 温馨提示：</strong></p>
+                <ul>
+                    <li>名额有限，下次请尽早报名</li>
+                    <li>可关注主办方后续活动通知</li>
+                    <li>如有疑问，请联系活动主办方</li>
+                </ul>
+
+                <p>感谢您的关注，期待下次与您相遇！</p>
+            </div>
+
+            <div class="footer">
+                <p>此邮件由 PU-SignUpBot 自动发送，请勿回复</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    logger.info("报名失败邮件制作完毕")
+    return email_content.strip()
+
+
+def send_email(email_info : str, addressee : str) -> bool:
     """
     发送报名成功邮件
     :param email_info: 邮件内容（HTML格式）

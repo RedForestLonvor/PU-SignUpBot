@@ -1,7 +1,7 @@
 [project]
 name = "pu-signupbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "pu活动报名机器人"
 requires-python = ">=3.13"
 dependencies = [
     "loguru>=0.7.3",
