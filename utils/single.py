@@ -14,6 +14,7 @@ def single_account(user_data:dict):
         if not activity_ids:
             raise ActivityIDsEmptyError(user_data['userName'])
         logger.info(f"用户 {user_data['userName']} 需要报名的活动ID: {activity_ids}")
+        bot.sync_server_time(activity_ids[0])# 同步服务器时间
         threads = []
         for activity_id in activity_ids:
             logger.info(f"用户 {user_data['userName']} 创建活动 {activity_id} 的报名线程")

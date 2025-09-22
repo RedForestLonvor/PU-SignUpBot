@@ -3,7 +3,7 @@ import threading
 import requests
 import time
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from utils.headers import HEADERS_ACTIVITY, HEADERS_ACTIVITY_INFO
 from loguru import logger
 from typing import Dict, Optional, Tuple
@@ -34,27 +34,72 @@ class ActivityBot:
         if not self.cur_token:
             self._refresh_token()
 
-        # 同步服务器时间
-        self._sync_server_time()
 
-    def _sync_server_time(self) -> None:
+    def sync_server_time(self,activity_id: str) -> None:
         """同步服务器时间，获取时间偏差"""
-        try:
-            start_time = time.time()
-            response = requests.head("https://apis.pocketuni.net/", timeout=5)
-            end_time = time.time()
+        max_retries = 3
+        headers = HEADERS_ACTIVITY.copy()
+        headers["Authorization"] = f"Bearer {self.cur_token}:{self.user_data.get('sid')}"
+        payload = {"id": activity_id}
 
-            server_time_str = response.headers.get('Date')
-            if server_time_str:
+        for attempt in range(max_retries):
+            try:
+                start_time = time.time()
+                response = requests.post(
+                    url=self.info_url,
+                    timeout=5,
+                    headers=headers,  # 防止被拦截
+                    json=payload
+                )
+                end_time = time.time()
+
+                # 检查响应状态
+                response.raise_for_status()
+
+                server_time_str = response.headers.get('Date')
+                if not server_time_str:
+                    raise ValueError("服务器未返回Date头")
+
+                # 解析服务器时间
                 server_time = parsedate_to_datetime(server_time_str)
-                # 考虑网络延迟，使用请求中点时间
-                local_time = datetime.fromtimestamp((start_time + end_time) / 2)
+                if server_time.tzinfo is None:
+                    server_time = server_time.replace(tzinfo=timezone.utc)
 
-                self.server_time_offset = (server_time - local_time).total_seconds()
-                logger.info(f"用户 {self.user_data['userName']} 服务器时间偏差: {self.server_time_offset:.3f}秒")
-        except Exception as e:
-            logger.warning(f"用户 {self.user_data['userName']} 时间同步失败: {e}")
-            self.server_time_offset = 0.0
+                # 计算网络延迟和本地时间
+                network_delay = end_time - start_time
+                local_utc_time = datetime.fromtimestamp(
+                    start_time + network_delay / 2,
+                    tz=timezone.utc
+                )
+
+                # 计算时间偏差
+                self.server_time_offset = (server_time - local_utc_time).total_seconds()
+
+                logger.info(
+                    f"用户 {self.user_data['userName']} 时间同步成功 "
+                    f"(尝试 {attempt + 1}/{max_retries}): "
+                    f"偏差={self.server_time_offset:.3f}秒, "
+                    f"延迟={network_delay * 1000:.1f}ms"
+                )
+                return  # 成功后退出
+
+            except requests.RequestException as e:
+                logger.warning(
+                    f"用户 {self.user_data['userName']} 时间同步失败 "
+                    f"(尝试 {attempt + 1}/{max_retries}): {e}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"用户 {self.user_data['userName']} 时间同步异常 "
+                    f"(尝试 {attempt + 1}/{max_retries}): {e}"
+                )
+
+            if attempt < max_retries - 1:
+                time.sleep(1)  # 重试前等待1秒
+
+        # 所有重试都失败
+        logger.error(f"用户 {self.user_data['userName']} 时间同步完全失败，使用默认偏差0")
+        self.server_time_offset = 0.0
 
     def _get_corrected_now(self) -> datetime:
         """获取校正后的当前时间"""
