@@ -122,7 +122,8 @@ class UserDataManager:
             print(f"共找到了{len( activities)}个满足需求的活动，以下是详细信息：")
             for i, activity in enumerate(activities):
                 print(f"{i+1}: ")
-                print(*[item for item in activity.items()])
+                for key, value in activity.items():
+                    print(f"{key}: {value}")
                 if input("是否添加该活动? [y/n]") == 'y':
                     activity_ids.append(activity.get('activity_id'))
 

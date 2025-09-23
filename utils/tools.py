@@ -122,7 +122,7 @@ def get_activity_type(token: str, sid: str) -> List | None:
         res = []
         data = response.json().get("data", {}).get("list", [])
         for d in data:
-            if d.get("name","未知") in ["活动分类","参与年级"]:
+            if d.get("name","未知") in ["活动分类","参与年级","归属院系"]:
                 res.append(d)
         return res
     except requests.exceptions.HTTPError as e:
@@ -265,20 +265,28 @@ def filter_activity_type(user : Dict) -> None:
     for activity_type in activity_types:
         print(f"当前类型: {activity_type.get('name', '未知')}")
         key = activity_type.get('key')
-
+        if not activity_type.get("infoList",[]):
+            logger.warning(f"当前类型: {activity_type.get('name', '未知')} 没有信息")
+            logger.warning(f"将使用默认信息")
+            user[key] = []
+            continue
         # 指定参与年级
         if key == 'allowYears':
-            year = input("请输入参与年级：")
-            user[key].extend(list(
-                info.get('id') for info in activity_type.get('infoList', []) if info.get('name') == year))
+            for i,info in enumerate(activity_type.get('infoList', [])):
+                print(f"{i}：\n  年级：{info.get('name', '未知')}")
+            year = input("请选择您的年级：")
+            user[key].append(activity_type.get('infoList')[int(year)].get('id'))
             continue
 
-        f = input(f"需要特定此类型的活动吗？[y/n]")
+        f = input(f"需要筛选此类型的活动吗？[y/n]")
         if f == 'n':
+            print("该类型已添加完毕。")
+            print("=" * 20)
             continue
+        user[key] = []
         for idx, info in enumerate(activity_type.get('infoList', [])):
-            print(f"{idx}：\n  类型名称：{info.get('name', '未知')}")
-            flag = input("是否添加该类型活动? [y/n] ").lower()
+            print(f"{idx}：\n  名称：{info.get('name', '未知')}")
+            flag = input("是否添加至筛选? [y/n] ").lower()
             if flag == 'y':
                 user[key].append(info.get('id'))
 
@@ -435,7 +443,7 @@ def send_email(email_info : str, addressee : str) -> bool:
     from email.header import Header
     try:
         # 从环境变量获取邮件配置
-        smtp_server = "smtp.qq.com"  # QQ邮箱SMTP服务器
+        smtp_server = os.getenv("INFO_EMAIL_SERVER")  # QQ邮箱SMTP服务器
         smtp_port = int(os.getenv("INFO_EMAIL_PORT", "465"))  # 默认465端口
         sender_email = os.getenv("INFO_EMAIL_HOST", "").strip('"')
         sender_password = os.getenv("INFO_EMAIL_SMTP_PASS", "").strip('"')
@@ -482,6 +490,4 @@ def send_email(email_info : str, addressee : str) -> bool:
     except Exception as e:
         logger.error(f"邮件发送失败：未知错误 - {str(e)}")
         return False
-
-
 
