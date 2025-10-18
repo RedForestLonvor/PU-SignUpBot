@@ -437,7 +437,7 @@ class ActivityBot:
                     logger.success("报名成功，停止后续请求")
                     break
                 futures.append(executor.submit(self._signup_worker, activity_id))
-                time.sleep(0.5)
+                time.sleep(0.4)
 
             # 第三轮：每秒一次，持续45次
             logger.info("启动第三轮持续报名...")
@@ -446,7 +446,7 @@ class ActivityBot:
                     logger.success("报名成功，停止后续请求")
                     break
                 futures.append(executor.submit(self._signup_worker, activity_id))
-                time.sleep(1)
+                time.sleep(0.8)
 
             # 等待所有任务完成
             completed_count = 0
@@ -471,7 +471,7 @@ class ActivityBot:
         :param activity_id: 活动 ID
         :return: True 表示报名成功，False 表示失败
         """
-        max_attempts = 10  # 每个线程最多尝试 10 次
+        max_attempts = 5  # 每个线程最多尝试 5 次
 
         for attempt in range(max_attempts):
             if self.signup_flags.get(activity_id):
@@ -481,13 +481,7 @@ class ActivityBot:
                 if self._send_signup_request(activity_id):
                     return True
 
-                # 动态调整等待时间：前几次快一些，后面慢一些
-                if attempt < 5:
-                    time.sleep(0.05)  # 50ms
-                elif attempt < 15:
-                    time.sleep(0.1)  # 100ms
-                else:
-                    time.sleep(0.2)  # 200ms
+                time.sleep(0.01)
 
             except Exception as e:
                 logger.error(f"用户 {self.user_data['userName']} 报名线程异常: {str(e)}")
