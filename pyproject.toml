@@ -1,0 +1,14 @@
+[project]
+name = "pu-signupbot"
+version = "0.1.0"
+description = "pu活动报名机器人"
+requires-python = ">=3.13"
+dependencies = [
+    "loguru>=0.7.3",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.5",
+]
+
+[[tool.uv.index]]
+name = "tuna"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"

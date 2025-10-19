@@ -1,0 +1,4 @@
+requests~=2.32.5
+loguru~=0.7.3
+python-dotenv~=1.1.1
+pycryptodome
