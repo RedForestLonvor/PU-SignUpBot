@@ -4,6 +4,9 @@ config.ini
 .cryptUserData
 .idea
 __pycache__
+.venv
+.gitignore
+.qoder
 
 # 用户隐私数据
 user_data.json
