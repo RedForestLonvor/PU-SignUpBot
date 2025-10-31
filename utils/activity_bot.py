@@ -9,6 +9,7 @@ from loguru import logger
 from typing import Dict, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
+from utils.pu_sign import generate_random_echo, current_timestamp_str, generate_x_sign
 
 
 class ActivityBot:
@@ -291,9 +292,15 @@ class ActivityBot:
         try:
             data = {"activityId": activity_id}
             headers = self._get_headers()
+            echo = generate_random_echo()
+            timestamp = current_timestamp_str()
+            xSign=generate_x_sign(echo=echo, timestamp=timestamp, client='web')
+            headers["X-Sign"] = xSign
 
             # 使用更短的超时时间提高响应速度
             response = requests.post(self.activity_url, headers=headers, json=data, timeout=5)
+
+            print(response.text)
 
             if response.status_code != 200:
                 logger.warning(f"用户 {self.user_data['userName']} 报名请求失败: HTTP {response.status_code}")
