@@ -2,6 +2,8 @@
 
 开发者们大部分已经毕业 欢迎任何形式 任何内容的社区贡献！
 
+友情链接: [PU-SignUpBot-GUI](https://github.com/Ranch007/PU-SignUpBot-GUI) : 带图形界面（GUI）的桌面应用
+
 ---
 
 ## What's new
